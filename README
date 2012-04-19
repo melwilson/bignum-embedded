@@ -1,0 +1,38 @@
+The bignum-embedded Project
+
+The goal of the bignum-embedded project is to supply a large-precision
+arithmetic package for use in microcontroller applications.
+
+
+Using the bignum-embedded Software
+
+Provide an include file: bnem_types.h mapping the resources needed
+by the bignum functions to the resources provided by the target
+microcontroller.
+
+Build the bignum-embedded library.  The output of the build will be:
+1.  An include file: bnem.h defining the interfaces to the bignum 
+functions, along with other .h files that bnem.h depends on.
+2.  A library libbnem.a containing the bignum-embedded functions
+that can be statically linked into the target application.
+
+
+bignum-embedded Design Goals
+
+Embedded devlopers commonly need to work with many different
+kinds of microcontroller.  The bignum-embedded design and packaging
+should not discourage this.
+
+It's a common practice to archive a finished project by saving together 
+all source material and tools that were used to build the project.  The
+design and packaging of bignum-embedded should make it easy to
+archive the library code in this manner.
+
+The bulk of the initial code for bignum-embedded was drawn from
+openssl/crypto/bn in the OpenSSL source tree as supplied with OpenBSD.
+bignum-embedded will continue to be provided under a BSD license
+as the OpenSSL source code was.
+
+Initially the bignum-embedded source code will be pure C, with no
+attempt to build custom optimization for specific processor types.
+This may change later.
