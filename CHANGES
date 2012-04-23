@@ -1,3 +1,12 @@
+2012-04-23
+	The code from the OpenSSL project has been pruned to remove 
+upward dependencies, then kludged cargo-cult style to get error-free 
+compiles and library builds.
+The unittests directory holds some framework code running under Linux 
+and Python3.1.2 with ctypes that allows results from the BN_* functions 
+to be checked against Python's own big-number implementation.
+
+
 2012-04-19
 	Code as modified compiles as individual modules without show-stopping errors.
-	None of the modified code has been tested or run.
+None of the modified code has been tested or run.
