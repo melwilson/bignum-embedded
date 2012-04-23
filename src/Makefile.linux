@@ -1,13 +1,11 @@
 #
-# bignum-embedded/Makefile
+# bignum-embedded/Makefile.linux
+# Aids in building and running unit tests under Linux
 #
 CROSS_PREFIX= 
 CROSS_FLAGS= 
 
 CONTROL_DEFS= -DOPENSSL_NO_FP_API -DTHIRTY_TWO_BIT -DOPENSSL_NO_ASM
-
-DIR=	bn
-TOP=	../..
 
 CC=	$(CROSS_PREFIX)gcc
 CPP= $(CC) -E
@@ -15,8 +13,6 @@ AR= $(CROSS_PREFIX)ar
 RANLIB = $(CROSS_PREFIX)ranlib
 
 INCLUDES = -I.
-#~ INCLUDES= -I/home/arm-cross/arm-none-eabi/include  -I../../../../../include -I. -I.. -I$(TOP) -I../../include
-#~ INCLUDES= -I/home/arm-cross/arm-none-eabi/include -I.
 CFLAG=  -g $(CROSS_FLAGS) $(CONTROL_DEFS)
 MAKEFILE=	Makefile
 
@@ -25,10 +21,6 @@ BN_ASM=		bn_asm.o
 CFLAGS= $(INCLUDES) $(CFLAG)
 ASFLAGS= $(INCLUDES) $(ASFLAG)
 AFLAGS= $(ASFLAGS)
-
-GENERAL=Makefile
-TEST=bntest.c exptest.c
-APPS=
 
 LIB= libbnem.a
 LIBSRC=	bn_add.c bn_div.c bn_exp.c bn_lib.c bn_ctx.c bn_mul.c bn_mod.c \
@@ -51,12 +43,7 @@ LIBOBJ=	bn_add.o bn_div.o bn_exp.o bn_lib.o bn_ctx.o bn_mul.o bn_mod.o \
 
 SRC= $(LIBSRC)
 
-EXHEADER= bn.h
-
 all: bnem.h $(LIB) libbnem.so
-
-bn_prime.h: bn_prime.pl
-	$(PERL) bn_prime.pl >bn_prime.h
 
 $(LIB): $(LIBOBJ)
 	$(AR) -rc $(LIB) $(LIBOBJ)
@@ -69,29 +56,15 @@ libbnem.so: $(LIBOBJ)
 # GNU make "catch all"
 %-mont.s:	asm/%-mont.pl;	$(PERL) $< $(CFLAGS) > $@
 
-files:
-	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
-
 install:
-	@[ -n "$(INSTALLTOP)" ] # should be set by top Makefile...
-	@headerlist="$(EXHEADER)"; for i in $$headerlist ; \
-	do  \
-	(cp $$i $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i; \
-	chmod 644 $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i ); \
-	done;
-
-exptest:
-	rm -f exptest
-	gcc -I../../include -g2 -ggdb -o exptest exptest.c ../../libcrypto.a
-
-div:
-	rm -f a.out
-	gcc -I.. -g div.c ../../libcrypto.a
+	cp libbnem.a libbnem.so ..
+	cp *.h ..
 
 tags:
 	ctags $(SRC)
 
-tests:
+tests: libbnem.so
+	../unittests/bnem_unit_1.py
 
 lint:
 	lint -DLINT $(INCLUDES) $(SRC)>fluff
