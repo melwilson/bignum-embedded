@@ -1,3 +1,14 @@
+2012-04-24
+	Test cases cover basic addition, subtraction, multiplication, division,
+and modular exponentiation.  A show-stopping problem appears when
+trying to use BN_clear_free to free a BIGNUM through ctypes; this may or
+may not be mission critical.  At any rate, we need to do some philosophy 
+around the usefulness of dynamic allocation in embedded systems.
+It's starting to look as though the biggest issues are going to be in
+configuration, packaging, and allocation.  E.g. providing an "opaque"
+data type to hold context within multiplication, division, and module-extraction
+is bad for routines that want their objects on the stack.
+
 2012-04-23
 	The code from the OpenSSL project has been pruned to remove 
 upward dependencies, then kludged cargo-cult style to get error-free 

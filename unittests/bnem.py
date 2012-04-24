@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.1
+# -*- coding: ASCII -*-
 '''Arrange to access a shared-object version of the bignum library using Python ctypes.'''
 import ctypes
 
@@ -43,28 +44,46 @@ struct bignum_st {
 			value = -value
 		return value
 			
-def library (path=''):
+def library (path):
 	'''Set up a bignum shared library for testing.'''
-	if not path:
-		path = "../libbnem.so"
 	libbnem = ctypes.CDLL (path)
 
 	libbnem. BN_init .argtypes = [ctypes.POINTER (BignumType)]	# not so useful -- clears a struct bignum_st to zero
 	libbnem. BN_new .restype = ctypes.POINTER (BignumType)	# allocate a new BIGNUM with empty data array
 	libbnem. BN_value_one .argtypes = []						# allocate a new BIGNUM with value set to 1
 	libbnem. BN_value_one .restype = ctypes.POINTER (BignumType)	# allocate a new BIGNUM with value set to 1
+	libbnem. BN_set_word .argtypes = [ctypes.POINTER (BignumType), ctypes.c_ulong]
+	libbnem. BN_set_word .restype = ctypes.c_int
+	libbnem. BN_clear_free .argtypes = [ctypes.POINTER (BignumType)]
+	libbnem. BN_set_negative .argtypes = [ctypes.POINTER (BignumType), ctypes.c_int]
 	
 	libbnem. BN_bin2bn .argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.POINTER (BignumType)]
 	libbnem. BN_bin2bn .restype = ctypes.POINTER (BignumType)
 	
 	libbnem. BN_add .argtypes = [ctypes.POINTER (BignumType), ctypes.POINTER (BignumType), ctypes.POINTER (BignumType)]
 	libbnem. BN_add .restype = ctypes.c_int
+	libbnem. BN_add_word .argtypes = [ctypes.POINTER (BignumType), ctypes.c_ulong]
+	libbnem. BN_add_word .restype = ctypes.c_int
 	
 	libbnem. BN_sub .argtypes = [ctypes.POINTER (BignumType), ctypes.POINTER (BignumType), ctypes.POINTER (BignumType)]
 	libbnem. BN_sub .restype = ctypes.c_int
+	libbnem. BN_sub_word .argtypes = [ctypes.POINTER (BignumType), ctypes.c_ulong]
+	libbnem. BN_sub_word .restype = ctypes.c_int
 	
 	libbnem. BN_mul .argtypes = [ctypes.POINTER (BignumType), ctypes.POINTER (BignumType), ctypes.POINTER (BignumType), ctypes.c_voidp]
 	libbnem. BN_mul .restype = ctypes.c_int
+	libbnem. BN_mul_word .argtypes = [ctypes.POINTER (BignumType), ctypes.c_ulong]
+	libbnem. BN_mul_word .restype = ctypes.c_int
+
+	libbnem. BN_div .argtypes = [ctypes.POINTER (BignumType), ctypes.POINTER (BignumType)	# quotient, remainder
+			, ctypes.POINTER (BignumType), ctypes.POINTER (BignumType), ctypes.c_voidp]	# divisor, dividend, context
+	libbnem. BN_div .restype = ctypes.c_int
+	
+	libbnem. BN_mod_exp .argtypes = [ctypes.POINTER (BignumType)	# result
+			, ctypes.POINTER (BignumType), ctypes.POINTER (BignumType)	# base, power
+			, ctypes.POINTER (BignumType), ctypes.c_voidp]	# modulus, context
+	libbnem. BN_mod_exp .restype = ctypes.c_int
+
 
 	libbnem. BN_CTX_new .argtypes = []
 	libbnem. BN_CTX_new .restype = ctypes.c_voidp
