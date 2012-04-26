@@ -1,0 +1,2 @@
+#!/bin/bash
+gcc -I.. -L/usr/lib/gcc/i486-linux-gnu/4.4 -L/usr/lib -static-libgcc -static -Wl,--gc-sections,-Map=bnem_ctest_1.map bnem_ctest_1.c  ../libbnem.a

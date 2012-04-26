@@ -7,6 +7,8 @@ extern unsigned int bn_errno;
 // kludge out some OPENSSL specials
 #define OPENSSL_malloc	malloc
 #define OPENSSL_free	free
+#define OPENSSL_NO_FP_API
+#define OPENSSL_NO_ASM
 //~ #define BN_BLINDING_free	free
 
 #define assert(x)

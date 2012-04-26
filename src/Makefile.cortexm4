@@ -5,7 +5,7 @@ CROSS_PREFIX= /home/arm-cross/bin/arm-none-eabi-
 #~CROSS_FLAGS= -march=armv7-m -mcpu=cortex-m4 -mthumb
 CROSS_FLAGS= -mcpu=cortex-m4 -mthumb
 
-CONTROL_DEFS= -DOPENSSL_NO_FP_API -DTHIRTY_TWO_BIT -DOPENSSL_NO_ASM
+CONTROL_DEFS= -DTHIRTY_TWO_BIT
 
 DIR=	bn
 TOP=	../..
@@ -17,7 +17,7 @@ RANLIB = $(CROSS_PREFIX)ranlib
 
 #~INCLUDES= -I/home/arm-cross/arm-none-eabi/include  -I../../../../../include -I. -I.. -I$(TOP) -I../../include
 INCLUDES= -I/home/arm-cross/arm-none-eabi/include -I.
-CFLAG= -g $(CROSS_FLAGS) $(CONTROL_DEFS)
+CFLAG=  -g $(CROSS_FLAGS) -ffunction-sections $(CONTROL_DEFS)
 MAKEFILE=	Makefile
 
 BN_ASM=		bn_asm.o
@@ -57,8 +57,7 @@ bn_prime.h: bn_prime.pl
 	$(PERL) bn_prime.pl >bn_prime.h
 
 $(LIB): $(LIBOBJ)
-	$(AR) -rc $(LIB) $(LIBOBJ)
-	$(RANLIB) $(LIB) || echo Never mind.
+	$(AR) -rcs $(LIB) $(LIBOBJ)
 	
 
 # GNU make "catch all"
@@ -68,12 +67,8 @@ files:
 	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
 
 install:
-	@[ -n "$(INSTALLTOP)" ] # should be set by top Makefile...
-	@headerlist="$(EXHEADER)"; for i in $$headerlist ; \
-	do  \
-	(cp $$i $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i; \
-	chmod 644 $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i ); \
-	done;
+	cp libbnem.a ..
+	cp *.h ..
 
 exptest:
 	rm -f exptest

@@ -963,3 +963,54 @@ int bn_cmp_part_words(const BN_ULONG *a, const BN_ULONG *b,
 		}
 	return bn_cmp_words(a,b,cl);
 	}
+
+/* Dummy implementations for bnem */
+void OPENSSL_cleanse (void *x, size_t s)	
+{
+	memset(x,0,s);
+}
+
+void ERR_clear_error()
+{
+}
+
+int RAND_bytes (unsigned char *buf, int num)
+{
+	while (num--)
+		*(buf++) = 1;
+	return 1;
+}
+
+int BIO_snprintf (char *buf, int n, char *fmt, void *lp)
+{
+	return 0;
+}
+
+void RAND_add (float *f, size_t s, float v)
+{
+}
+
+unsigned long ERR_peek_last_error ()
+{
+	return 0;
+}
+
+const char *ERR_func_error_string(unsigned long e)
+{
+	return "<ERROR>";
+}
+
+int RAND_pseudo_bytes(unsigned char *buf,int num)
+{
+	while (num--)
+		*(buf++) = 2;
+	return 1;
+}
+
+void ERR_load_strings(int lib,ERR_STRING_DATA str[])
+{
+}
+
+void ERR_put_error(int lib, int func,int reason,const char *file,int line)
+{
+}

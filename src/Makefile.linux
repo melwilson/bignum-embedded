@@ -5,7 +5,8 @@
 CROSS_PREFIX= 
 CROSS_FLAGS= 
 
-CONTROL_DEFS= -DOPENSSL_NO_FP_API -DTHIRTY_TWO_BIT -DOPENSSL_NO_ASM
+#~ CONTROL_DEFS= -DOPENSSL_NO_FP_API -DTHIRTY_TWO_BIT -DOPENSSL_NO_ASM
+CONTROL_DEFS= -DTHIRTY_TWO_BIT
 
 CC=	$(CROSS_PREFIX)gcc
 CPP= $(CC) -E
@@ -13,7 +14,7 @@ AR= $(CROSS_PREFIX)ar
 RANLIB = $(CROSS_PREFIX)ranlib
 
 INCLUDES = -I.
-CFLAG=  -g $(CROSS_FLAGS) $(CONTROL_DEFS)
+CFLAG=  -g $(CROSS_FLAGS) -ffunction-sections $(CONTROL_DEFS)
 MAKEFILE=	Makefile
 
 BN_ASM=		bn_asm.o
@@ -46,8 +47,7 @@ SRC= $(LIBSRC)
 all: bnem.h $(LIB) libbnem.so
 
 $(LIB): $(LIBOBJ)
-	$(AR) -rc $(LIB) $(LIBOBJ)
-	$(RANLIB) $(LIB) || echo Never mind.
+	$(AR) -rcs $(LIB) $(LIBOBJ)
 	
 libbnem.so: $(LIBOBJ)
 	$(CC) -g -shared -o libbnem.so $(LIBOBJ)
