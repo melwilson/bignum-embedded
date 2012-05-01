@@ -35,4 +35,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "bnem_kludge.h"
 #include <bn.h>
 
+#define BIGNUM_LOCAL(label,size)	BN_ULONG label##_words[size]; BIGNUM label={.d=label##_words, .top=0, .dmax=(size), .neg=0, .flags=BN_FLG_STATIC_DATA}
+#define BITS(n)	(((n) + sizeof(BN_ULONG)*8-1) / (sizeof(BN_ULONG) * 8))
+
 #endif // BNEM_H_
