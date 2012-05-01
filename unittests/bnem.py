@@ -22,6 +22,16 @@ struct bignum_st {
 			('flags', ctypes.c_int),
 			]
 			
+	def __int__ (self):
+		'''Return this bignum's value as a Python integer.'''
+		value, factor = 0, 1
+		for w in self.datawords():
+			value += w * factor
+			factor *= 0x100000000
+		if self.neg:
+			value = -value
+		return value
+			
 	def datawords (self):
 		'''Yield the words in the little-endian data array.'''
 		return (self.d[k] for k in range (self.top))
@@ -36,13 +46,7 @@ struct bignum_st {
 			
 	def python_int (self):
 		'''Return this bignum's value as a Python integer.'''
-		value, factor = 0, 1
-		for w in self.datawords():
-			value += w * factor
-			factor *= 0x100000000
-		if self.neg:
-			value = -value
-		return value
+		return self.__int__()
 			
 def library (path):
 	'''Set up a bignum shared library for testing.'''
@@ -91,8 +95,11 @@ def library (path):
 
 
 if __name__ == '__main__':
+	libbnem = library ("../libbnem.so")
 	p1 = libbnem.BN_new()
 	print (p1)
 	v1 = p1.contents
 	print (v1)
 	print (v1.top, v1.dmax, v1.neg, v1.flags)
+	
+	print ('POINTERs are shareable:', ctypes.POINTER (BignumType) is ctypes.POINTER (BignumType))
