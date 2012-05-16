@@ -1,0 +1,25 @@
+# {For Open On-Chip Debugger 0.6.0-dev-00477-gf1c0133 }
+# { Display the stm32f4xx registers associated with USART }
+source [find bitsbytes.tcl]
+source [find memory.tcl]
+puts "\nUSART"
+# {"http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html"}
+set usart 0x40011000 ; # { base for USART1 }
+set usart_sr [memread32 [expr $usart]]
+set usart_brr [memread32 [expr $usart + 8]]
+set usart_cr1 [memread32 [expr $usart + 12]]
+set usart_cr2 [memread32 [expr $usart + 16]]
+set usart_cr3 [memread32 [expr $usart + 20]]
+set usart_gtpr [memread32 [expr $usart + 24]]
+puts [format "SR\t%x" $usart_sr]
+foreach masklabel {{0x80 "TXE"} {0x40 "TC"} {0x20 "RXNE"} 
+	    {8 "ORE"} {4 "NF"} {2 "FE"} {1 "PE"}} {
+    if {$usart_sr & [lindex $masklabel 0]} {
+	puts -nonewline "[lindex $masklabel 1] "
+    }
+}
+puts ""
+puts [format "CR1\t0x%08x" $usart_cr1]
+puts [format "CR2\t0x%08x" $usart_cr2]
+puts [format "CR3\t0x%08x" $usart_cr3]
+

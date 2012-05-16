@@ -1,0 +1,53 @@
+# {For Open On-Chip Debugger 0.6.0-dev-00477-gf1c0133 }
+# { Display the ARM Cortex-M4 registers associated with a Hard Fault }
+source [find bitsbytes.tcl]
+source [find memory.tcl]
+puts "\nHard Fault Analysis"
+# {"http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html"}
+set hfsr [memread32 0xE000ED2C]
+puts [format "HFSR\t0x%x" $hfsr]
+if {$hfsr & 0x40000000} {
+    set mmsr [memread8 0xE000ED28]
+    set bfsr [memread8 0xE000ED29]
+    set ufsr [memread16 0xE000ED2A]
+    puts [format "CFSR (UFSR BFSR MMFSR):\t0x%04x 0x%02x 0x%02x" $ufsr $bfsr $mmsr]
+    set afsr [memread32 0xE000ED3C]
+    puts [format "AFSR\t0x%x" $afsr]
+    if {$mmsr != 0} {
+        foreach masklabel {{0x10 "Stacking Fault"} {8, "Unstacking Fault"} {2 "DataAccess Fault"} 
+	            {1 "Instruction Access Fault"}} {
+	    if {$msr & [lindex $masklabel 0]} {
+	        puts -nonewline "[lindex $masklabel 1] "
+	    }
+	}
+        if {$mmsr & 0x80} {
+            set mmar [memread32 0xE000ED34]
+	    puts "addr 0x%x" $mmar]
+	} else {
+	    puts ""
+	}
+    }
+    if {$bfsr != 0} {
+        foreach masklabel {{0x10 "Exception Stacking Fault "} {8 "Exception Unstacking Fault "} {4 "Imprecise Data Bus Fault "} 
+	                        {2 "Precise Data Bus Fault "} {1 "Instruction Bus Fault "}} {
+	    if {$bfsr & [lindex $masklabel 0]} {
+	        puts -nonewline "[lindex $masklabel 1] "
+	    }
+	}
+        if {$bfsr & 0x80} {
+            set bfar [memread32 0xE000ED38]
+            puts [format "addr 0x%x" $bfar]
+	} else {
+	    puts ""
+	}
+   }
+   if {$ufsr != 0} {
+       foreach masklabel {{0x200 "Divide by Zero"} {0x100 "Unaligned Access"} 
+                   {8 "No Coprocessor"} {4 "Invalid PC"} {2 "Invalid State"} {1 "Undefined Opcode"}} {
+           if {$ufsr & [lindex $masklabel 0]} {
+	       puts -nonewline "[lindex $masklabel 1] "
+	    }
+       }
+   }
+}
+puts ""

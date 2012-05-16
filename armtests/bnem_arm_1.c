@@ -4,6 +4,15 @@
 #include <stm32f4xx_rcc.h>
 #include <stm32f4xx_usart.h>
 #include "bnem.h"
+ // Baud rate for serial commands ..
+#define BAUD	9600
+
+// Use Discovery board Blinkenlights:
+//~ #define LED_GREEN	PD12
+//~ #define LED_ORANGE	PD13
+//~ #define LED_RED	PD14
+//~ #define LED_BLUE	PD15
+
 // 112 KB SRAM
 BIGNUM_LOCAL (x, BITS (192));	// first test operand
 BIGNUM_LOCAL (y, BITS (192));	// second test operand
@@ -20,8 +29,14 @@ volatile unsigned char otq, otx;
 
 static const unsigned char hex[16] = "0123456789abcdef";
 
+extern unsigned int _sbrk_call_count;	// for debugging
+extern int _sbrk_last_incr;
+extern unsigned char *_sbrk_prev_heap;
+unsigned char idle_count=0;
+
 //----------------------------------------------------------
 #define THIS_USART	USART1
+// .. changing the line above will mean big changes to setup() .
 
 void USART1_IRQHandler (void) __attribute__ ((interrupt ("IRQ")));
 void USART1_IRQHandler (void)
@@ -91,17 +106,36 @@ void setup (void)
 	{ // Set up random-number generator ..
 	}
 	
+	{ // Set up Blinkenlights ..
+		GPIO_InitTypeDef gpiod_init = { .GPIO_Pin = 0xF<<12	// i.e. 12,13,14,15
+				, .GPIO_Mode = GPIO_Mode_OUT
+				, .GPIO_Speed = GPIO_Speed_2MHz
+				, .GPIO_OType = GPIO_OType_PP
+				, .GPIO_PuPd = GPIO_PuPd_NOPULL 
+				};
+		RCC_AHB1PeriphClockCmd (RCC_AHB1Periph_GPIOD, ENABLE);
+		GPIO_Init (GPIOD, &gpiod_init);
+	}
+	
 	{ // Set up serial communication ..
-		GPIO_InitTypeDef gpio_init = {.GPIO_Mode=GPIO_Mode_AF};
-		USART_InitTypeDef usart_init = {.USART_BaudRate=9600
-				, .USART_WordLength=USART_WordLength_8b
-				, .USART_StopBits=USART_StopBits_1, .USART_Parity=USART_Parity_No
-				, .USART_Mode=USART_Mode_Rx|USART_Mode_Tx
-				, .USART_HardwareFlowControl=USART_HardwareFlowControl_None};
+		GPIO_InitTypeDef serial_gpio_init = {.GPIO_Pin= GPIO_Pin_9 | GPIO_Pin_10
+				, .GPIO_Mode = GPIO_Mode_AF
+				, .GPIO_Speed = GPIO_Speed_2MHz
+				, .GPIO_OType = GPIO_OType_PP
+				, .GPIO_PuPd = GPIO_PuPd_NOPULL 
+				};
+		USART_InitTypeDef usart_init = {.USART_BaudRate = BAUD
+				, .USART_WordLength = USART_WordLength_8b
+				, .USART_StopBits = USART_StopBits_1
+				, .USART_Parity = USART_Parity_No
+				, .USART_Mode = USART_Mode_Rx | USART_Mode_Tx
+				, .USART_HardwareFlowControl = USART_HardwareFlowControl_None
+				};
 		RCC_APB2PeriphClockCmd (RCC_APB2Periph_USART1, ENABLE);
 		RCC_AHB1PeriphClockCmd (RCC_AHB1Periph_GPIOA, ENABLE);
-		GPIO_PinAFConfig (GPIOA, GPIO_PinSource0, GPIO_AF_USART1);
-		GPIO_Init (GPIOA, &gpio_init);
+		GPIO_Init (GPIOA, &serial_gpio_init);
+		GPIO_PinAFConfig (GPIOA, GPIO_PinSource9, GPIO_AF_USART1);
+		GPIO_PinAFConfig (GPIOA, GPIO_PinSource10, GPIO_AF_USART1);
 		USART_Init (THIS_USART, &usart_init);
 		USART_Cmd (THIS_USART, ENABLE);
 		USART_ITConfig (THIS_USART, USART_IT_RXNE, ENABLE);
@@ -113,7 +147,8 @@ void setup (void)
 
 //----------------------------------------------------------
 
-int hexify_buf (unsigned char *bufp, unsigned char *endp)
+// Pack a buffer full of bytes 0..0x0F into 0..0xFF
+int pack_hexbuf (unsigned char *bufp, unsigned char *endp)
 {
 	unsigned char *qp, *xp;
 	qp = xp = bufp;
@@ -124,8 +159,8 @@ int hexify_buf (unsigned char *bufp, unsigned char *endp)
 		unsigned char c = *(xp++);
 		*(qp++) = (c << 4) | *(xp++);
 	}
-	return qp - bufp;	// number of bytes converted
-} // hexify_buf
+	return qp - bufp;	// number of resulting packed bytes
+} // pack_hexbuf
 
 void send_bignum (BIGNUM *bn, char label)
 {
@@ -151,6 +186,17 @@ void send_results (int code, BIGNUM* result1, BIGNUM* result2)
 	serial_putc ('\n');
 } // send_results
 
+void send_debug ()
+{
+	serial_puts ("\n_sbrk_call_count:\t");
+	serial_put_hexint (_sbrk_call_count);
+	serial_puts ("\n_sbrk_prev_heap:\t");
+	serial_put_hexint ((int)_sbrk_prev_heap);
+	serial_puts ("\n_sbrk_last_incr:\t");
+	serial_put_hexint (_sbrk_last_incr);
+	serial_putc ('\n');
+} // send_debug
+
 #define BUFSIZE	512
 void process_char (unsigned char c)
 {
@@ -170,17 +216,17 @@ void process_char (unsigned char c)
 		break;
 		
 	case 'X':	// Enter X operand
-		hexcount = hexify_buf (hexbuf, bufp);
+		hexcount = pack_hexbuf (hexbuf, bufp);
 		BN_bin2bn (hexbuf, hexcount, &x);
 		bufp = hexbuf;
 		break;
 	case 'Y':	// Enter Y operand
-		hexcount = hexify_buf (hexbuf, bufp);
+		hexcount = pack_hexbuf (hexbuf, bufp);
 		BN_bin2bn (hexbuf, hexcount, &y);
 		bufp = hexbuf;
 		break;
 	case 'M':	// Enter Modulus field
-		hexcount = hexify_buf (hexbuf, bufp);
+		hexcount = pack_hexbuf (hexbuf, bufp);
 		BN_bin2bn (hexbuf, hexcount, &m);
 		bufp = hexbuf;
 		break;
@@ -215,8 +261,11 @@ void process_char (unsigned char c)
 		serial_putc ('\n');
 		break;
 	
-	case '?':	// identify test
+	case '"':	// identify test
 		serial_puts ("\nbnem_arm_1.c\n");
+		break;
+	case '?':	// log debugging data
+		send_debug();
 		break;
 	case ' ': case '\t': case '\n':	// intentional no-op
 		break;
@@ -225,17 +274,34 @@ void process_char (unsigned char c)
 	} // switch c
 } // process_char
 
+extern void SystemInit (void);
+
 void main (void) __attribute__ ((noreturn));
 void main (void)
 {
+	static const unsigned char grey4[16] = {0x0, 0x1, 0x3, 0x2, 0x6, 0x7, 0x5, 0x4, 0xC, 0xD, 0xF, 0xE, 0xA, 0xB, 0x9, 0x8};
+	SystemInit();
 	setup();
+	// enable interrupts
 	ctx = BN_CTX_new();
+	//~ free (ctx);
 	process_char ('!');	// initialize input processing
+	NVIC_EnableIRQ (USART1_IRQn);
 	for (;;) {
+		unsigned char v;
 		int c;
 		if ((c = serial_getc()) >= 0) {
 			serial_putc (c);		// echo input
 			process_char (c);
 		}
+		
+		idle_count++;
+		v = grey4[idle_count >> 4];
+		//~ GPIO_WriteBit (GPIOD, GPIO_Pin_12, (v & 1) != 0);
+		//~ GPIO_WriteBit (GPIOD, GPIO_Pin_13, (v & 2) != 0);
+		//~ GPIO_WriteBit (GPIOD, GPIO_Pin_14, (v & 4) != 0);
+		//~ GPIO_WriteBit (GPIOD, GPIO_Pin_15, (v & 8) != 0);
+		GPIO_ResetBits (GPIOD, v << 12);
+		GPIO_SetBits (GPIOD, ((~v) & 0xF) << 12);
 	}
 } // main
