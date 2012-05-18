@@ -6,6 +6,8 @@
 #include "bnem.h"
  // Baud rate for serial commands ..
 #define BAUD	9600
+#define COMMAND_USART	USART2
+// .. changeing the line above needs changes in setup and IRQ handler
 
 // Use Discovery board Blinkenlights:
 //~ #define LED_GREEN	PD12
@@ -34,22 +36,23 @@ extern int _sbrk_last_incr;
 extern unsigned char *_sbrk_prev_heap;
 unsigned char idle_count=0;
 
+RCC_ClocksTypeDef rcc_clocksstatus;
+
 //----------------------------------------------------------
-#define THIS_USART	USART1
 // .. changing the line above will mean big changes to setup() .
 
-void USART1_IRQHandler (void) __attribute__ ((interrupt ("IRQ")));
-void USART1_IRQHandler (void)
+void USART2_IRQHandler (void) __attribute__ ((interrupt ("IRQ")));
+void USART2_IRQHandler (void)
 {
-	if (USART_GetITStatus (THIS_USART, USART_IT_RXNE)) {
-		inbuf[inq++] = USART_ReceiveData (THIS_USART);
+	if (USART_GetITStatus (COMMAND_USART, USART_IT_RXNE)) {
+		inbuf[inq++] = USART_ReceiveData (COMMAND_USART);
 	}
 	
-	if (USART_GetITStatus (THIS_USART, USART_IT_TXE)) {
+	if (USART_GetITStatus (COMMAND_USART, USART_IT_TXE)) {
 		if (otq != otx)	// .. send another character from the buffer
-			USART_SendData (THIS_USART, otbuf[otx++]);
+			USART_SendData (COMMAND_USART, otbuf[otx++]);
 		else			// .. ignore tx-ready interrupts
-			USART_ITConfig (THIS_USART, USART_IT_TXE, DISABLE);
+			USART_ITConfig (COMMAND_USART, USART_IT_TXE, DISABLE);
 	}
 } // USART1_IRQHandler
 
@@ -63,7 +66,7 @@ int serial_getc ()
 void serial_putc (unsigned char c)
 {
 	otbuf[otq++] = c;
-	USART_ITConfig (THIS_USART, USART_IT_TXE, ENABLE);
+	USART_ITConfig (COMMAND_USART, USART_IT_TXE, ENABLE);
 } // serial_putc
 
 void serial_puts (const char *s)
@@ -72,7 +75,7 @@ void serial_puts (const char *s)
 		serial_putc (*(s++));
 		while (*s)
 			otbuf[otq++] = *(s++);
-		USART_ITConfig (THIS_USART, USART_IT_TXE, ENABLE);
+		USART_ITConfig (COMMAND_USART, USART_IT_TXE, ENABLE);
 	}
 } // serial_puts
 
@@ -107,7 +110,8 @@ void setup (void)
 	}
 	
 	{ // Set up Blinkenlights ..
-		GPIO_InitTypeDef gpiod_init = { .GPIO_Pin = 0xF<<12	// i.e. 12,13,14,15
+		//~ GPIO_InitTypeDef gpiod_init = { .GPIO_Pin = 0xF<<12	// i.e. 12,13,14,15
+		GPIO_InitTypeDef gpiod_init = { .GPIO_Pin = 1<<12 | 1<<13 | 1<<14 | 1<<15
 				, .GPIO_Mode = GPIO_Mode_OUT
 				, .GPIO_Speed = GPIO_Speed_2MHz
 				, .GPIO_OType = GPIO_OType_PP
@@ -118,7 +122,7 @@ void setup (void)
 	}
 	
 	{ // Set up serial communication ..
-		GPIO_InitTypeDef serial_gpio_init = {.GPIO_Pin= GPIO_Pin_9 | GPIO_Pin_10
+		GPIO_InitTypeDef serial_gpio_init = {.GPIO_Pin= GPIO_Pin_2 | GPIO_Pin_3
 				, .GPIO_Mode = GPIO_Mode_AF
 				, .GPIO_Speed = GPIO_Speed_2MHz
 				, .GPIO_OType = GPIO_OType_PP
@@ -131,15 +135,24 @@ void setup (void)
 				, .USART_Mode = USART_Mode_Rx | USART_Mode_Tx
 				, .USART_HardwareFlowControl = USART_HardwareFlowControl_None
 				};
-		RCC_APB2PeriphClockCmd (RCC_APB2Periph_USART1, ENABLE);
+		//~ RCC_APB2PeriphClockCmd (RCC_APB2Periph_USART1, ENABLE);
+		//~ RCC_AHB1PeriphClockCmd (RCC_AHB1Periph_GPIOA, ENABLE);
+		RCC_APB1PeriphClockCmd (RCC_APB1Periph_USART2, ENABLE);
 		RCC_AHB1PeriphClockCmd (RCC_AHB1Periph_GPIOA, ENABLE);
 		GPIO_Init (GPIOA, &serial_gpio_init);
-		GPIO_PinAFConfig (GPIOA, GPIO_PinSource9, GPIO_AF_USART1);
-		GPIO_PinAFConfig (GPIOA, GPIO_PinSource10, GPIO_AF_USART1);
-		USART_Init (THIS_USART, &usart_init);
-		USART_Cmd (THIS_USART, ENABLE);
-		USART_ITConfig (THIS_USART, USART_IT_RXNE, ENABLE);
-		USART_ITConfig (THIS_USART, USART_IT_TXE, DISABLE);
+		GPIO_PinAFConfig (GPIOA, GPIO_PinSource2, GPIO_AF_USART2);
+		GPIO_PinAFConfig (GPIOA, GPIO_PinSource3, GPIO_AF_USART2);
+		USART_Init (COMMAND_USART, &usart_init);
+				
+		//~ NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
+		//~ NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configMAX_CO_ROUTINE_PRIORITIES;
+		//~ NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+		//~ NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+		//~ NVIC_Init( &NVIC_InitStructure );
+				
+		USART_Cmd (COMMAND_USART, ENABLE);
+		USART_ITConfig (COMMAND_USART, USART_IT_RXNE, ENABLE);
+		USART_ITConfig (COMMAND_USART, USART_IT_TXE, DISABLE);
 		inq = inx = 0;
 		otq = otx = 0;
 	}
@@ -282,25 +295,27 @@ void main (void)
 	static const unsigned char grey4[16] = {0x0, 0x1, 0x3, 0x2, 0x6, 0x7, 0x5, 0x4, 0xC, 0xD, 0xF, 0xE, 0xA, 0xB, 0x9, 0x8};
 	SystemInit();
 	setup();
-	// enable interrupts
 	ctx = BN_CTX_new();
 	//~ free (ctx);
+	RCC_GetClocksFreq (&rcc_clocksstatus);
 	process_char ('!');	// initialize input processing
-	NVIC_EnableIRQ (USART1_IRQn);
+	NVIC_EnableIRQ (USART2_IRQn);
 	for (;;) {
 		unsigned char v;
 		int c;
 		if ((c = serial_getc()) >= 0) {
 			serial_putc (c);		// echo input
 			process_char (c);
+			serial_putc (0x55);
 		}
 		
 		idle_count++;
 		v = grey4[idle_count >> 4];
-		//~ GPIO_WriteBit (GPIOD, GPIO_Pin_12, (v & 1) != 0);
-		//~ GPIO_WriteBit (GPIOD, GPIO_Pin_13, (v & 2) != 0);
-		//~ GPIO_WriteBit (GPIOD, GPIO_Pin_14, (v & 4) != 0);
-		//~ GPIO_WriteBit (GPIOD, GPIO_Pin_15, (v & 8) != 0);
+		// The WriteBit calls below, seem not to work.  The Reset/SetBits calls do work.
+		// GPIO_WriteBit (GPIOD, GPIO_Pin_12, (v & 1) != 0);
+		// GPIO_WriteBit (GPIOD, GPIO_Pin_13, (v & 2) != 0);
+		// GPIO_WriteBit (GPIOD, GPIO_Pin_14, (v & 4) != 0);
+		// GPIO_WriteBit (GPIOD, GPIO_Pin_15, (v & 8) != 0);
 		GPIO_ResetBits (GPIOD, v << 12);
 		GPIO_SetBits (GPIOD, ((~v) & 0xF) << 12);
 	}
