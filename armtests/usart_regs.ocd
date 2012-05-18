@@ -4,7 +4,13 @@ source [find bitsbytes.tcl]
 source [find memory.tcl]
 puts "\nUSART"
 # {"http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html"}
-set usart 0x40011000 ; # { base for USART1 }
+set usart_base(1) 0x40011000
+set usart_base(2) 0x40004400
+set usart_base(3) 0x40004800
+set usart_base(4) 0x40004C00
+set usart_base(5) 0x40005000
+set usart_base(6) 0x40011400
+set usart $usart_base(2)
 set usart_sr [memread32 [expr $usart]]
 set usart_brr [memread32 [expr $usart + 8]]
 set usart_cr1 [memread32 [expr $usart + 12]]
@@ -19,6 +25,7 @@ foreach masklabel {{0x80 "TXE"} {0x40 "TC"} {0x20 "RXNE"}
     }
 }
 puts ""
+puts [format "BRR\t0x%08x\t%d:%d" $usart_brr [expr $usart_brr >> 4] [expr $usart_brr & 0xF]]
 puts [format "CR1\t0x%08x" $usart_cr1]
 puts [format "CR2\t0x%08x" $usart_cr2]
 puts [format "CR3\t0x%08x" $usart_cr3]

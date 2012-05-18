@@ -1,0 +1,109 @@
+# {For Open On-Chip Debugger 0.6.0-dev-00477-gf1c0133 }
+# { Display the stm32f4xx registers associated with RCC }
+source [find bitsbytes.tcl]
+source [find memory.tcl]
+puts "\nRCC"
+# {"http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html"}
+set rcc_base 0x40023800
+set rcc $rcc_base
+set rcc_cr [memread32 [expr $rcc]]
+set rcc_pllcfgr [memread32 [expr $rcc + 4]]
+set rcc_cfgr [memread32 [expr $rcc + 8]]
+set rcc_cir [memread32 [expr $rcc + 12]]
+set rcc_ahb1rstr  [memread32 [expr $rcc + 0x10]]
+set rcc_ahb2rstr  [memread32 [expr $rcc + 0x14]]
+set rcc_ahb3rstr  [memread32 [expr $rcc + 0x18]]
+set rcc_apb1rstr  [memread32 [expr $rcc + 28]]
+set rcc_apb2rstr  [memread32 [expr $rcc + 32]]
+set rcc_ahb1enr  [memread32 [expr $rcc + 0x30]]
+set rcc_ahb2enr  [memread32 [expr $rcc + 0x34]]
+set rcc_ahb3enr  [memread32 [expr $rcc + 0x38]]
+set rcc_apb1enr  [memread32 [expr $rcc + 0x40]]
+set rcc_apb2enr  [memread32 [expr $rcc + 0x44]]
+set rcc_ahb1lpenr  [memread32 [expr $rcc + 0x50]]
+set rcc_ahb2lpenr  [memread32 [expr $rcc + 0x54]]
+set rcc_ahb3lpenr  [memread32 [expr $rcc + 0x58]]
+set rcc_apb1lpenr  [memread32 [expr $rcc + 0x60]]
+set rcc_apb2lpenr  [memread32 [expr $rcc + 0x64]]
+set rcc_bdcr  [memread32 [expr $rcc + 0x70]]
+set rcc_csr  [memread32 [expr $rcc + 0x74]]
+set rcc_sscgr  [memread32 [expr $rcc + 0x80]]
+set rcc_plli2scfgr  [memread32 [expr $rcc + 0x84]]
+puts [format "CR\t%x" $rcc_cr]
+foreach masklabel {{0x2000000 "PLLRDY"} {0x1000000 "PLLON"} {0x80000 "CSSON"} {0x40000 "HSEBYP"} 
+	    {0x20000 "HSERDY"} {0x10000 "HSEON"} {2 "HSIRDY"} {1 "HSION"}} {
+    if {$rcc_cr & [lindex $masklabel 0]} {
+	puts -nonewline "  [lindex $masklabel 1]"
+    }
+}
+puts ""
+puts [format "PLLCFGR\t0x%08x" $rcc_pllcfgr]
+puts -nonewline "  PLLQ=[expr $rcc_pllcfgr >> 24 & 0xF]"
+puts -nonewline "  PLLSRC=[lindex {"HSI" "HSE"} [expr $rcc_pllcfgr >> 22 & 1]]"
+puts -nonewline "  PLLP=[lindex {2 4 6 8} [expr $rcc_pllcfgr >> 16 & 3]]"
+puts -nonewline "  PLLN=[expr $rcc_pllcfgr >> 6 & 0x1FF]"
+puts -nonewline "  PLLM=[expr $rcc_pllcfgr & 0x3F]"
+puts ""
+if $rcc_cfgr {
+	puts [format "CFGR\t0x%08x" $rcc_cfgr]
+	puts -nonewline "  SW=[lindex {"HSI" "HSE" "PLL"} [expr $rcc_cfgr & 3]]"
+	puts -nonewline "  SWS=[lindex {"HSI" "HSE" "PLL" "xx"} [expr $rcc_cfgr >> 2 & 3]]"
+	puts -nonewline "  HPRE=[lindex {"/1" "/1" "/1" "/1" "/1" "/1" "/1" "/1" "/2" "/4" "/8" "/16" "/64" "/128" "/256" "/512"} [expr $rcc_cfgr >> 4 & 0xF]]"
+	puts -nonewline "  PPRE1=[lindex {"/1" "/1" "/1" "/1" "/2" "/4" "/8" "/16"} [expr $rcc_cfgr >> 10 & 7]]"
+	puts -nonewline "  PPRE2=[lindex {"/1" "/1" "/1" "/1" "/2" "/4" "/8" "/16"} [expr $rcc_cfgr >> 13 & 7]]"
+	foreach masklabel {} {
+		if {$rcc_cfgr & [lindex $masklabel 0]} {
+			puts -nonewline "  [lindex $masklabel 1]"
+		}
+	}
+	puts ""
+}
+puts [format "CIR\t0x%08x" $rcc_cir]
+if $rcc_ahb1rstr {puts [format "AHB1RSTR\t0x%08x" $rcc_ahb1rstr] }
+if $rcc_ahb2rstr {puts [format "AHB2RSTR\t0x%08x" $rcc_ahb2rstr] }
+if $rcc_ahb3rstr {puts [format "AHB3RSTR\t0x%08x" $rcc_ahb3rstr] }
+if $rcc_apb1rstr {puts [format "APB1RSTR\t0x%08x" $rcc_apb1rstr] }
+if $rcc_apb2rstr {puts [format "APB2RSTR\t0x%08x" $rcc_apb2rstr] }
+if $rcc_ahb1enr {
+	puts [format "AHB1ENR\t0x%08x" $rcc_ahb1enr] 
+	foreach masklabel {{0x100000 "CCMDATARAMEN"}  {0x1000 "CRCEN"}
+			{0x80 "GPIOHEN"} {8 "GPIODEN"} {4 "GPIOCEN"} {2 "GPIOBEN"} {1 "GPIOAEN"}} {
+		if {$rcc_ahb1enr & [lindex $masklabel 0]} {
+			puts -nonewline "  [lindex $masklabel 1]"
+		}
+	}
+	puts ""
+}
+if $rcc_ahb2enr {puts [format "AHB2ENR\t0x%08x" $rcc_ahb2enr] }
+if $rcc_ahb3enr {puts [format "AHB3ENR\t0x%08x" $rcc_ahb3enr] }
+if $rcc_apb1enr {
+	puts [format "APB1ENR\t0x%08x" $rcc_apb1enr] 
+	foreach masklabel {{0x10000000 "PWREN"}
+			{0x100000 "USART5EN"} {0x80000 "USART4EN"} {0x40000 "USART3EN"} {0x20000 "USART2EN"}} {
+		if {$rcc_apb1enr & [lindex $masklabel 0]} {
+			puts -nonewline "  [lindex $masklabel 1]"
+		}
+	}
+	puts ""
+}
+if $rcc_apb2enr {puts [format "APB2ENR\t0x%08x" $rcc_apb2enr] }
+if $rcc_ahb1lpenr {puts [format "AHB1LPENR\t0x%08x" $rcc_ahb1lpenr] }
+if $rcc_ahb2lpenr {puts [format "AHB2LPENR\t0x%08x" $rcc_ahb2lpenr] }
+if $rcc_ahb3lpenr {puts [format "AHB3LPENR\t0x%08x" $rcc_ahb3lpenr] }
+if $rcc_apb1lpenr {puts [format "APB1LPENR\t0x%08x" $rcc_apb1lpenr] }
+if $rcc_apb2lpenr {puts [format "APB2LPENR\t0x%08x" $rcc_apb2lpenr] }
+if 1 {puts [format "BDCR\t0x%08x" $rcc_bdcr] }
+if 1 {
+	puts [format "CSR\t0x%08x" $rcc_csr] 
+	foreach masklabel {{0x80000000 "LPWRRSTF"} { 0x40000000 "WWDGRSTF"} {0x20000000 "IWDGSRTF} {0x10000000 "SFTRSTF"}
+				{0x08000000 "PORRSTF"} {0x04000000 "PINRSTF"} {0X02000000 "BORRSTF"} {0x01000000 "RMVF"}
+				{2 "LSIRDY"} {1 "LSION"}} {
+		if {$rcc_csr & [lindex $masklabel 0]} {
+			puts -nonewline "  [lindex $masklabel 1]"
+		}
+	}
+	puts ""
+}
+if 1 {puts [format "SSCGR\t0x%08x" $rcc_sscgr] }
+if 1 {puts [format "PLLI2SCFGR\t0x%08x" $rcc_plli2scfgr] }
+puts ""
