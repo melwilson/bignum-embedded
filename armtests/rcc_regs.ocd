@@ -29,13 +29,16 @@ set rcc_bdcr  [memread32 [expr $rcc + 0x70]]
 set rcc_csr  [memread32 [expr $rcc + 0x74]]
 set rcc_sscgr  [memread32 [expr $rcc + 0x80]]
 set rcc_plli2scfgr  [memread32 [expr $rcc + 0x84]]
-puts [format "CR\t%x" $rcc_cr]
-foreach masklabel {{0x2000000 "PLLRDY"} {0x1000000 "PLLON"} {0x80000 "CSSON"} {0x40000 "HSEBYP"} 
-	    {0x20000 "HSERDY"} {0x10000 "HSEON"} {2 "HSIRDY"} {1 "HSION"}} {
-    if {$rcc_cr & [lindex $masklabel 0]} {
-	puts -nonewline "  [lindex $masklabel 1]"
-    }
+
+proc labelled_bits {var masklabels} {
+	foreach ml $masklabels {
+		if {$var & [lindex $ml 0]} { puts -nonewline "  [lindex $ml 1]" }
+	}
 }
+puts [format "CR\t0x%08x" $rcc_cr]
+labelled_bits $rcc_cr {{0x2000000 "PLLRDY"} {0x1000000 "PLLON"} 
+	{0x80000 "CSSON"} {0x40000 "HSEBYP"} {0x20000 "HSERDY"} {0x10000 "HSEON"} 
+	{2 "HSIRDY"} {1 "HSION"}}
 puts ""
 puts [format "PLLCFGR\t0x%08x" $rcc_pllcfgr]
 puts -nonewline "  PLLQ=[expr $rcc_pllcfgr >> 24 & 0xF]"
@@ -51,11 +54,12 @@ if $rcc_cfgr {
 	puts -nonewline "  HPRE=[lindex {"/1" "/1" "/1" "/1" "/1" "/1" "/1" "/1" "/2" "/4" "/8" "/16" "/64" "/128" "/256" "/512"} [expr $rcc_cfgr >> 4 & 0xF]]"
 	puts -nonewline "  PPRE1=[lindex {"/1" "/1" "/1" "/1" "/2" "/4" "/8" "/16"} [expr $rcc_cfgr >> 10 & 7]]"
 	puts -nonewline "  PPRE2=[lindex {"/1" "/1" "/1" "/1" "/2" "/4" "/8" "/16"} [expr $rcc_cfgr >> 13 & 7]]"
-	foreach masklabel {} {
-		if {$rcc_cfgr & [lindex $masklabel 0]} {
-			puts -nonewline "  [lindex $masklabel 1]"
-		}
-	}
+	puts ""
+	puts -nonewline "  MCO2=[lindex {"SYSCLK" "PLLI2S" "HSE" "PLL"} [expr $rcc_cfgr>>30 & 3]]"
+	puts -nonewline "  MCO2PRE=[lindex {"/1" "/1" "/1" "/1" "/2" "/3" "/4" "/5"} [expr $rcc_cfgr>>27 & 7]]"
+	puts -nonewline "  MCO1=[lindex {"HSI" "LSE" "HSE" "PLL"} [expr $rcc_cfgr>>21 & 3]]"
+	puts -nonewline "  MCO1PRE=[lindex {"/1" "/1" "/1" "/1" "/2" "/3" "/4" "/5"} [expr $rcc_cfgr>>24 & 7]]"
+	labelled_bits $rcc_cfgr {{0x800000 "I2SSCR"}}
 	puts ""
 }
 puts [format "CIR\t0x%08x" $rcc_cir]
@@ -66,24 +70,16 @@ if $rcc_apb1rstr {puts [format "APB1RSTR\t0x%08x" $rcc_apb1rstr] }
 if $rcc_apb2rstr {puts [format "APB2RSTR\t0x%08x" $rcc_apb2rstr] }
 if $rcc_ahb1enr {
 	puts [format "AHB1ENR\t0x%08x" $rcc_ahb1enr] 
-	foreach masklabel {{0x100000 "CCMDATARAMEN"}  {0x1000 "CRCEN"}
-			{0x80 "GPIOHEN"} {8 "GPIODEN"} {4 "GPIOCEN"} {2 "GPIOBEN"} {1 "GPIOAEN"}} {
-		if {$rcc_ahb1enr & [lindex $masklabel 0]} {
-			puts -nonewline "  [lindex $masklabel 1]"
-		}
-	}
+	labelled_bits $rcc_ahb1enr {{0x100000 "CCMDATARAMEN"}  {0x1000 "CRCEN"}
+			{0x80 "GPIOHEN"} {8 "GPIODEN"} {4 "GPIOCEN"} {2 "GPIOBEN"} {1 "GPIOAEN"}}
 	puts ""
 }
 if $rcc_ahb2enr {puts [format "AHB2ENR\t0x%08x" $rcc_ahb2enr] }
 if $rcc_ahb3enr {puts [format "AHB3ENR\t0x%08x" $rcc_ahb3enr] }
 if $rcc_apb1enr {
 	puts [format "APB1ENR\t0x%08x" $rcc_apb1enr] 
-	foreach masklabel {{0x10000000 "PWREN"}
-			{0x100000 "USART5EN"} {0x80000 "USART4EN"} {0x40000 "USART3EN"} {0x20000 "USART2EN"}} {
-		if {$rcc_apb1enr & [lindex $masklabel 0]} {
-			puts -nonewline "  [lindex $masklabel 1]"
-		}
-	}
+	labelled_bits $rcc_apb1enr {{0x10000000 "PWREN"}
+			{0x100000 "USART5EN"} {0x80000 "USART4EN"} {0x40000 "USART3EN"} {0x20000 "USART2EN"}}
 	puts ""
 }
 if $rcc_apb2enr {puts [format "APB2ENR\t0x%08x" $rcc_apb2enr] }
@@ -95,13 +91,9 @@ if $rcc_apb2lpenr {puts [format "APB2LPENR\t0x%08x" $rcc_apb2lpenr] }
 if 1 {puts [format "BDCR\t0x%08x" $rcc_bdcr] }
 if 1 {
 	puts [format "CSR\t0x%08x" $rcc_csr] 
-	foreach masklabel {{0x80000000 "LPWRRSTF"} { 0x40000000 "WWDGRSTF"} {0x20000000 "IWDGSRTF} {0x10000000 "SFTRSTF"}
+	labelled_bits $rcc_csr {{0x80000000 "LPWRRSTF"} { 0x40000000 "WWDGRSTF"} {0x20000000 "IWDGSRTF} {0x10000000 "SFTRSTF"}
 				{0x08000000 "PORRSTF"} {0x04000000 "PINRSTF"} {0X02000000 "BORRSTF"} {0x01000000 "RMVF"}
-				{2 "LSIRDY"} {1 "LSION"}} {
-		if {$rcc_csr & [lindex $masklabel 0]} {
-			puts -nonewline "  [lindex $masklabel 1]"
-		}
-	}
+				{2 "LSIRDY"} {1 "LSION"}}
 	puts ""
 }
 if 1 {puts [format "SSCGR\t0x%08x" $rcc_sscgr] }

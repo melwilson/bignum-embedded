@@ -17,16 +17,36 @@ set usart_cr1 [memread32 [expr $usart + 12]]
 set usart_cr2 [memread32 [expr $usart + 16]]
 set usart_cr3 [memread32 [expr $usart + 20]]
 set usart_gtpr [memread32 [expr $usart + 24]]
-puts [format "SR\t%x" $usart_sr]
-foreach masklabel {{0x80 "TXE"} {0x40 "TC"} {0x20 "RXNE"} 
-	    {8 "ORE"} {4 "NF"} {2 "FE"} {1 "PE"}} {
-    if {$usart_sr & [lindex $masklabel 0]} {
-	puts -nonewline "[lindex $masklabel 1] "
-    }
+
+proc labelled_bits {var masklabels} {
+	foreach ml $masklabels {
+		if {$var & [lindex $ml 0]} { puts -nonewline "  [lindex $ml 1]" }
+	}
 }
+puts [format "SR\t%x" $usart_sr]
+labelled_bits $usart_sr {{0x80 "TXE"} {0x40 "TC"} {0x20 "RXNE"} 
+	    {8 "ORE"} {4 "NF"} {2 "FE"} {1 "PE"}}
 puts ""
 puts [format "BRR\t0x%08x\t%d:%d" $usart_brr [expr $usart_brr >> 4] [expr $usart_brr & 0xF]]
 puts [format "CR1\t0x%08x" $usart_cr1]
+if {$usart_cr1} {
+	labelled_bits $usart_cr1 {{0x8000 "OVER8"} {0x2000 "LIE"} {0x1000 "M"} 
+		    {0x800 "WAKE"} {0x400 "PCE"} {0x200 "PS"} {0x100 "PEIE"}
+		    {0x80 "TXEIE"} {0x40 "TCIE"} {0x20 "RXNEIE"} {0x10 "IDLEIE"}
+		    {8 "TE"} {4 "RE"} {2 "RWU"} {1 "SBK"}}
+	puts ""
+}
 puts [format "CR2\t0x%08x" $usart_cr2]
+if {$usart_cr2} {
+	labelled_bits $usart_cr2 {{0x4000 "LINEN"} {0x2000 "STOP1"} {0x1000 "STOP0"} 
+		    {0x800 "CLKEN"} {0x400 "CPOL"} {0x200 "CPHA"} {0x100 "LBCL"}
+		    {0x40 "LBDE"} {0x20 "LBDL"}}
+	puts ""
+}
 puts [format "CR3\t0x%08x" $usart_cr3]
-
+if {$usart_cr3} {
+	labelled_bits $usart_cr3 {{0x800 "ONEBIT"} {0x400 "CTSIE"} {0x200 "CTSE"} {0x100 "RTSE"}
+		    {0x80 "DMAT"} {0x40 "DMAR"} {0x20 "SCEN"} {0x10 "NACK"}
+		    {8 "HDSEL"} {4 "IRLP"} {2 "IREN"} {1 "EIE"}}
+	puts ""
+}
