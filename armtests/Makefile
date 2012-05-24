@@ -17,6 +17,7 @@ STRIP = $(CROSS_PREFIX)strip
 OBJCOPY = $(CROSS_PREFIX)objcopy
 
 DEFINES= -D"assert_param(x)="
+DEFINES += -D"HSE_VALUE=((uint32_t)8000000)"
 
 PERIPH = STM32F4xx_StdPeriph_Driver
 
@@ -34,7 +35,8 @@ CFLAGS =  -c -Wall -mlong-calls -ffunction-sections
 CFLAGS += $(CROSS_FLAGS)
 CFLAGS += -g $(OPTIMIZATION) $(INCLUDES) $(DEFINES)
 ASFLAGS =  -Wall  $(CROSS_FLAGS) -mthumb-interwork $(INCLUDES)
-LDFLAGS = -v -g -static $(OPTIMIZATION) $(LIBRARIES) -Wl,--cref,--relax,-Map=$(PROGRAM).map,--gc-sections  -Tbnem_arm_1.x.ld
+#~ LDFLAGS = -v -g -static $(OPTIMIZATION) $(LIBRARIES) -Wl,--cref,--relax,-Map=$(PROGRAM).map,--gc-sections  -Tbnem_arm_1.x.ld
+LDFLAGS = -g -static $(OPTIMIZATION) $(LIBRARIES) -Wl,--cref,--relax,-Map=$(PROGRAM).map,--gc-sections  -Tbnem_arm_1.x.ld
 
 
 STMOBJECTS= stm32f4xx_gpio.o stm32f4xx_rcc.o stm32f4xx_rtc.o stm32f4xx_usart.o

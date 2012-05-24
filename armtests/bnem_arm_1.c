@@ -36,7 +36,7 @@ extern int _sbrk_last_incr;
 extern unsigned char *_sbrk_prev_heap;
 unsigned char idle_count=0;
 
-RCC_ClocksTypeDef rcc_clocksstatus;
+RCC_ClocksTypeDef rcc_clocksfreq;
 
 //----------------------------------------------------------
 // .. changing the line above will mean big changes to setup() .
@@ -106,6 +106,29 @@ void serial_put_hexint (int i)
 //----------------------------------------------------------
 void setup (void)
 {
+	{ // set up clock outputs for debugging ..
+		GPIO_InitTypeDef gpio8_init = { .GPIO_Pin = GPIO_Pin_8
+				, .GPIO_Mode = GPIO_Mode_AF
+				, .GPIO_Speed = GPIO_Speed_100MHz
+				, .GPIO_OType = GPIO_OType_PP
+				, .GPIO_PuPd = GPIO_PuPd_NOPULL 
+				};
+		GPIO_InitTypeDef gpio9_init = { .GPIO_Pin = GPIO_Pin_9
+				, .GPIO_Mode = GPIO_Mode_AF
+				, .GPIO_Speed = GPIO_Speed_100MHz
+				, .GPIO_OType = GPIO_OType_PP
+				, .GPIO_PuPd = GPIO_PuPd_NOPULL 
+				};
+		RCC_AHB1PeriphClockCmd (RCC_AHB1Periph_GPIOA, ENABLE);
+		RCC_AHB1PeriphClockCmd (RCC_AHB1Periph_GPIOC, ENABLE);
+		GPIO_Init (GPIOA, &gpio8_init);
+		GPIO_Init (GPIOC, &gpio9_init);
+		RCC_MCO1Config (RCC_MCO1Source_PLLCLK, RCC_MCO1Div_4);
+		RCC_MCO2Config (RCC_MCO2Source_SYSCLK, RCC_MCO2Div_4);
+		GPIO_PinAFConfig (GPIOA, GPIO_PinSource8, GPIO_AF_MCO);
+		GPIO_PinAFConfig (GPIOC, GPIO_PinSource9, GPIO_AF_MCO);
+	}
+	
 	{ // Set up random-number generator ..
 	}
 	
@@ -122,13 +145,15 @@ void setup (void)
 	}
 	
 	{ // Set up serial communication ..
-		GPIO_InitTypeDef serial_gpio_init = {.GPIO_Pin= GPIO_Pin_2 | GPIO_Pin_3
+		GPIO_InitTypeDef serial_gpio_init = {.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3
 				, .GPIO_Mode = GPIO_Mode_AF
-				, .GPIO_Speed = GPIO_Speed_2MHz
+				//~ , .GPIO_Speed = GPIO_Speed_2MHz
+				, .GPIO_Speed = GPIO_Speed_25MHz
 				, .GPIO_OType = GPIO_OType_PP
 				, .GPIO_PuPd = GPIO_PuPd_NOPULL 
 				};
 		USART_InitTypeDef usart_init = {.USART_BaudRate = BAUD
+		//~ USART_InitTypeDef usart_init = {.USART_BaudRate = BAUD*4
 				, .USART_WordLength = USART_WordLength_8b
 				, .USART_StopBits = USART_StopBits_1
 				, .USART_Parity = USART_Parity_No
@@ -297,16 +322,16 @@ void main (void)
 	setup();
 	ctx = BN_CTX_new();
 	//~ free (ctx);
-	RCC_GetClocksFreq (&rcc_clocksstatus);
+	RCC_GetClocksFreq (&rcc_clocksfreq);
 	process_char ('!');	// initialize input processing
 	NVIC_EnableIRQ (USART2_IRQn);
 	for (;;) {
 		unsigned char v;
 		int c;
 		if ((c = serial_getc()) >= 0) {
-			serial_putc (c);		// echo input
+			//~ serial_putc (c);		// echo input
 			process_char (c);
-			serial_putc (0x55);
+			//~ serial_putc (0x55);
 		}
 		
 		idle_count++;

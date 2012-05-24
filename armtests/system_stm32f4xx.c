@@ -117,13 +117,17 @@
 
 
 /* PLL_VCO = (HSE_VALUE or HSI_VALUE / VCO_DIVISOR) * VCO_MULTIPLIER */
+// Set into RCC_PLLCFGR.PLLM ..
 #define VCO_DIVISOR	8
+// Set into RCC_PLLCFGR.PLLN ..
 #define VCO_MULTIPLIER	336
 
 /* SYSCLK = PLL_VCO / SYSCLK_DIVISOR */
+// Encoded into RCC_PLLCFGR.PLLP .. 
 #define SYSCLK_DIVISOR	2
 
 /* USB OTG FS, SDIO and RNG Clock =  PLL_VCO / PLLQ */
+// Set into RCC_PLLCFGR.PLLQ ..
 #define CLK_DIVISOR	7
 
 
@@ -269,9 +273,7 @@ static void SetSysClock (void)
 
 	/* Enable HSE */
 	RCC->CR |= (uint32_t)RCC_CR_HSEON;
-
-	/* Wait till HSE is ready and if Time out is reached exit */
-	do {
+	do {	/* Wait till HSE is ready and if Time out is reached exit */
 		HSEStatus = RCC->CR & RCC_CR_HSERDY;
 		StartUpCounter++;
 	} while (HSEStatus == 0  &&  StartUpCounter != HSE_STARTUP_TIMEOUT);
@@ -293,8 +295,14 @@ static void SetSysClock (void)
 		RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;	/* PCLK1 = HCLK / 4 */
 
 		/* Configure the main PLL */
-		RCC->PLLCFGR = VCO_DIVISOR | VCO_MULTIPLIER<<6 | ((SYSCLK_DIVISOR >> 1) -1)<<16
-				| RCC_PLLCFGR_PLLSRC_HSE | CLK_DIVISOR<<24;
+		//~ RCC->PLLCFGR = VCO_DIVISOR | VCO_MULTIPLIER<<6 | ((SYSCLK_DIVISOR >> 1) -1)<<16
+				//~ | RCC_PLLCFGR_PLLSRC_HSE | CLK_DIVISOR<<24;
+		RCC->PLLCFGR = 0x20000000 	// reserved bits
+						| VCO_DIVISOR 			// set PLLM
+						| VCO_MULTIPLIER<<6 	// set PLLN
+						| ((SYSCLK_DIVISOR >> 1) -1)<<16	// set PLLP
+						| RCC_PLLCFGR_PLLSRC_HSE 
+						| CLK_DIVISOR<<24;	// set PLLQ
 
 		/* Enable the main PLL */
 		RCC->CR |= RCC_CR_PLLON;
