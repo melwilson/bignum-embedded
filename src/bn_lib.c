@@ -189,6 +189,8 @@
 //~ const char BN_version[]="Big Number" OPENSSL_VERSION_PTEXT;
 const char BN_version[]="Big Number" " MPW.0";
 
+unsigned int bn_errno;	// holds the last error code encountered by a BN function
+
 /* This stuff appears to be completely unused, so is deprecated */
 #ifndef OPENSSL_NO_DEPRECATED
 /* For a 32 bit machine
@@ -967,11 +969,12 @@ int bn_cmp_part_words(const BN_ULONG *a, const BN_ULONG *b,
 /* Dummy implementations for bnem */
 void OPENSSL_cleanse (void *x, size_t s)	
 {
-	memset(x,0,s);
+	memset (x, 0, s);
 }
 
 void ERR_clear_error()
 {
+	bn_errno = 0;
 }
 
 int RAND_bytes (unsigned char *buf, int num)
@@ -1011,6 +1014,11 @@ void ERR_load_strings(int lib,ERR_STRING_DATA str[])
 {
 }
 
-void ERR_put_error(int lib, int func,int reason,const char *file,int line)
+void ERR_put_error (int lib, int func, int reason, const char *file, int line)
 {
+	bn_errno = func << 16 | reason;
+}
+unsigned long ERR_get_error (void)
+{
+	return (unsigned long)bn_errno;
 }

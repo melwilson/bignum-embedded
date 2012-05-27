@@ -115,4 +115,4 @@
  * Mel Wilson for the bignum-embedded project.
  *
  */
-unsigned int bn_errno = 0;
+//~ unsigned int bn_errno = 0;

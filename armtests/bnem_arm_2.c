@@ -1,4 +1,4 @@
-// Excercise BN using static allocation for major variables
+// Excercise BN, explicitly using dynamic allocation
 #include <stdlib.h>
 #include <errno.h>
 #include <stm32f4xx.h>
@@ -18,11 +18,11 @@
 //~ #define LED_BLUE	PD15
 
 // 112 KB SRAM
-BIGNUM_LOCAL (x, BITS (192));	// first test operand
-BIGNUM_LOCAL (y, BITS (192));	// second test operand
-BIGNUM_LOCAL (m, BITS (192));	// modulus
-BIGNUM_LOCAL (r, BITS (192));	// first result (e.g. remainder)
-BIGNUM_LOCAL (q, BITS (192));	// second result (e.g. quotient)
+BIGNUM x;	// first test operand
+BIGNUM y;	// second test operand
+BIGNUM m;	// modulus
+BIGNUM r;	// first result (e.g. remainder)
+BIGNUM q;	// second result (e.g. quotient)
 BN_CTX *ctx;
 int code;
 
@@ -309,7 +309,7 @@ void process_char (unsigned char c)
 		break;
 	
 	case '"':	// identify test
-		serial_puts ("\nbnem_arm_1.c\n");
+		serial_puts ("\nbnem_arm_2.c\n");
 		break;
 	case '?':	// log debugging data
 		send_debug();
@@ -330,6 +330,11 @@ void main (void)
 	SystemInit();
 	setup();
 	ctx = BN_CTX_new();
+	BN_init (&x);
+	BN_init (&y);
+	BN_init (&m);
+	BN_init (&r);
+	BN_init (&q);
 	RCC_GetClocksFreq (&rcc_clocksfreq);
 	process_char ('!');	// initialize input processing
 	NVIC_EnableIRQ (USART2_IRQn);

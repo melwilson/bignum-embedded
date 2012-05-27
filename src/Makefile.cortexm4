@@ -1,11 +1,12 @@
 #
-# bignum-embedded/Makefile
+# bignum-embedded/Makefile.cortexm4
 #
 CROSS_PREFIX= /home/arm-cross/bin/arm-none-eabi-
 #~CROSS_FLAGS= -march=armv7-m -mcpu=cortex-m4 -mthumb
 CROSS_FLAGS= -mcpu=cortex-m4 -mthumb
 
 CONTROL_DEFS= -DTHIRTY_TWO_BIT
+OPTIMIZATION= -Os
 
 DIR=	bn
 TOP=	../..
@@ -15,9 +16,8 @@ CPP= $(CC) -E
 AR= $(CROSS_PREFIX)ar
 RANLIB = $(CROSS_PREFIX)ranlib
 
-#~INCLUDES= -I/home/arm-cross/arm-none-eabi/include  -I../../../../../include -I. -I.. -I$(TOP) -I../../include
 INCLUDES= -I/home/arm-cross/arm-none-eabi/include -I.
-CFLAG=  -g $(CROSS_FLAGS) -ffunction-sections $(CONTROL_DEFS)
+CFLAG=  -g $(CROSS_FLAGS) $(OPTIMIZATION) -ffunction-sections $(CONTROL_DEFS)
 MAKEFILE=	Makefile
 
 BN_ASM=		bn_asm.o
@@ -95,7 +95,7 @@ dclean:
 	mv -f Makefile.new $(MAKEFILE)
 
 clean:
-	rm -f *.s *.o *.obj lib tags core .pure .nfs* *.old *.bak fluff
+	rm -f *.s *.o *.obj lib tags core .pure .nfs* *.old *.bak fluff libbnem.a
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
