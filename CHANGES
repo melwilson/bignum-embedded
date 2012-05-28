@@ -1,3 +1,16 @@
+2012-05-28
+	A test case in the `armtests` directory runs on an stm32f4-discovery board
+and unit tests show that the bignum results agree with Python long arithmetic.
+Correct results are only obtained by using dynamic memory allocation in the
+embedded board.  The bignum library needs to resize results in many circumstances
+and static allocation can't be done without understanding what those circumstances
+are.
+	Packaging is rather crude.  All source for the stm32f4 unit tests is carried
+in that directory (thinking of the unit tests as a primordial application,this might be a 
+good thing.)  Makefiles for the stm32f4 test programs are tied to a particular tool chain.  
+Makefiles are being reorganized to localize these dependencies so that someday users 
+with other toolchains will know what to change.
+
 2012-04-24
 	Test cases cover basic addition, subtraction, multiplication, division,
 and modular exponentiation.  A show-stopping problem appears when
