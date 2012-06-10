@@ -1,8 +1,9 @@
 #
 # bignum-embedded/Makefile.cortexm4
 #
+LIB_VARIANT=cortexm4
+
 CROSS_PREFIX= /home/arm-cross/bin/arm-none-eabi-
-#~CROSS_FLAGS= -march=armv7-m -mcpu=cortex-m4 -mthumb
 CROSS_FLAGS= -mcpu=cortex-m4 -mthumb
 
 CONTROL_DEFS= -DTHIRTY_TWO_BIT
@@ -30,13 +31,15 @@ GENERAL=Makefile
 TEST=bntest.c exptest.c
 APPS=
 
-LIB= libbnem.a
+LIB= libbnem-$(LIB_VARIANT).a
 LIBSRC=	bn_add.c bn_div.c bn_exp.c bn_lib.c bn_ctx.c bn_mul.c bn_mod.c \
 	bn_rand.c bn_shift.c bn_word.c \
 	bn_kron.c bn_sqrt.c bn_gcd.c bn_prime.c bn_sqr.c bn_asm.c \
 	bn_recp.c bn_mont.c bn_mpi.c bn_exp2.c bn_gf2m.c bn_nist.c \
 	bn_depr.c bn_const.c \
-	bn_err.c bn_blind.c
+	bn_err.c bn_blind.c \
+	bnem_errno.c \
+	bnem_lib.c bnem_primes.c bnem_rand.c
 #	# bn_print.c
 
 LIBOBJ=	bn_add.o bn_div.o bn_exp.o bn_lib.o bn_ctx.o bn_mul.o bn_mod.o \
@@ -44,7 +47,9 @@ LIBOBJ=	bn_add.o bn_div.o bn_exp.o bn_lib.o bn_ctx.o bn_mul.o bn_mod.o \
 	bn_kron.o bn_sqrt.o bn_gcd.o bn_prime.o bn_sqr.o $(BN_ASM) \
 	bn_recp.o bn_mont.o bn_mpi.o bn_exp2.o bn_gf2m.o bn_nist.o \
 	bn_depr.o bn_const.o \
-	bn_err.o bn_blind.o
+	bn_err.o bn_blind.o \
+	bnem_errno.o \
+	bnem_lib.o bnem_primes.o bnem_rand.o
 #	# bn_print.o
 
 SRC= $(LIBSRC)
@@ -67,7 +72,7 @@ files:
 	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
 
 install:
-	cp libbnem.a ..
+	cp $(LIB) ..
 	cp *.h ..
 
 exptest:
@@ -95,7 +100,7 @@ dclean:
 	mv -f Makefile.new $(MAKEFILE)
 
 clean:
-	rm -f *.s *.o *.obj lib tags core .pure .nfs* *.old *.bak fluff libbnem.a
+	rm -f *.s *.o *.obj lib tags core .pure .nfs* *.old *.bak fluff $(LIB)
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

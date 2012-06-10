@@ -2,6 +2,8 @@
 # bignum-embedded/Makefile.linux
 # Aids in building and running unit tests under Linux
 #
+LIB_VARIANT=i386-32
+
 CROSS_PREFIX= 
 CROSS_FLAGS= 
 
@@ -23,7 +25,7 @@ CFLAGS= $(INCLUDES) $(OPTIMIZATION) $(CFLAG)
 ASFLAGS= $(INCLUDES) $(ASFLAG)
 AFLAGS= $(ASFLAGS)
 
-LIB= libbnem
+LIB= libbnem-$(LIB_VARIANT)
 LIBSRC=	bn_add.c bn_div.c bn_exp.c bn_lib.c bn_ctx.c bn_mul.c bn_mod.c \
 	bn_rand.c bn_shift.c bn_word.c \
 	bn_kron.c bn_sqrt.c bn_gcd.c bn_prime.c bn_sqr.c bn_asm.c \
