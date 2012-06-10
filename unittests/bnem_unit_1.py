@@ -4,7 +4,7 @@ import bnem		# ctypes interface to the bignum-embedded shared library
 import random
 import unittest
 
-lbn = bnem.library ("../libbnem.so")	# library under test
+lbn = bnem.library ("../libbnem-i386-32.so")	# library under test
 
 def random_ulong ():
 	return random.randint (0, 0xFFFFFFFF)

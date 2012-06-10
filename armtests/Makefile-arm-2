@@ -46,7 +46,7 @@ STMOBJECTS= stm32f4xx_gpio.o stm32f4xx_rcc.o stm32f4xx_rtc.o stm32f4xx_usart.o
 
 all: $(PROGRAM).hex
 
-$(PROGRAM).hex: startup_stm32f4xx.o system_stm32f4xx.o syscalls.o $(PROGRAM).o $(STMOBJECTS) libbnem.a
+$(PROGRAM).hex: startup_stm32f4xx.o system_stm32f4xx.o syscalls.o $(PROGRAM).o $(STMOBJECTS) libbnem-cortexm4.a
 	$(CC)  $(LDFLAGS) -o $(PROGRAM).elf  $^
 	$(OBJCOPY) -O ihex $(PROGRAM).elf $@
 
