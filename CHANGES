@@ -1,3 +1,8 @@
+2012-06-10
+	Simplified functions for primality testing and random-number generation
+are added, plus an implementation of Euclid's Extended GCD algorithm.
+
+
 2012-05-28
 	A test case in the `armtests` directory runs on an stm32f4-discovery board
 and unit tests show that the bignum results agree with Python long arithmetic.
@@ -11,6 +16,7 @@ good thing.)  Makefiles for the stm32f4 test programs are tied to a particular t
 Makefiles are being reorganized to localize these dependencies so that someday users 
 with other toolchains will know what to change.
 
+
 2012-04-24
 	Test cases cover basic addition, subtraction, multiplication, division,
 and modular exponentiation.  A show-stopping problem appears when
@@ -21,6 +27,7 @@ It's starting to look as though the biggest issues are going to be in
 configuration, packaging, and allocation.  E.g. providing an "opaque"
 data type to hold context within multiplication, division, and module-extraction
 is bad for routines that want their objects on the stack.
+
 
 2012-04-23
 	The code from the OpenSSL project has been pruned to remove 

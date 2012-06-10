@@ -1,23 +1,40 @@
-The bignum-embedded Project
+The bignum-embedded Project:
 
 The goal of the bignum-embedded project is to supply a large-precision
 arithmetic package for use in microcontroller applications.
 
 
-Using the bignum-embedded Software
+Using the bignum-embedded Software:
 
 Provide an include file: bnem_types.h mapping the resources needed
 by the bignum functions to the resources provided by the target
 microcontroller.
 
 Build the bignum-embedded library.  The output of the build will be:
-1.  An include file: bnem.h defining the interfaces to the bignum 
+1.  An include file `bnem.h` defining the interfaces to the bignum 
 functions, along with other .h files that bnem.h depends on.
-2.  A library libbnem.a containing the bignum-embedded functions
+2.  A library `libbnem.a` containing the bignum-embedded functions
 that can be statically linked into the target application.
 
 
-bignum-embedded Design Goals
+Random numbers in bignum-embedded:
+
+With bignum-embedded's own random-number functions, a 
+`bnem_random_word` function is implemented as a source of random values.
+It's defined with the signature
+
+uint32_t bnem_random_word ();
+
+and this signature is typedef'ed as `bnem_random_word_t` .
+
+The implementation in the library is based on the C library `rand` function
+and no attempt has been made to strengthen it.  The library version is
+defined with `__attribute__ ((weak))`.  Therefore an application can create
+its own `bnem_random_word` function, e.g. using a hardware random-value
+generator, and this will override the library function for all uses.
+
+
+bignum-embedded Design Goals:
 
 Embedded devlopers commonly need to work with many different
 kinds of microcontroller.  The bignum-embedded design and packaging

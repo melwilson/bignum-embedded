@@ -320,7 +320,7 @@ class TestPrimes (BignumTest):
 	def test_prime_1 (self):
 		p1 = lbn.BN_new()
 		q1 = lbn.bnem_random_prime (p1, 64)
-		print ('Random prime (4):', int (p1.contents), int (q1.contents))
+		print ('Random prime (64):', int (p1.contents), int (q1.contents))
 		# Note that ctypes does not have OOR (original object return), it constructs a new, equivalent object each time you retrieve an attribute:
 		# so the following kinds of test can't work:
 		#: self.assert_(p1 is q1)
@@ -330,7 +330,7 @@ class TestPrimes (BignumTest):
 		
 		p2 = lbn.BN_new()
 		q2 = lbn.bnem_random_prime (p2, 32)
-		print ('Random prime (3):', int (p2.contents), int (q2.contents))
+		print ('Random prime (32):', int (p2.contents), int (q2.contents))
 		
 		ctx = lbn.BN_CTX_new()
 		n3 = lbn.BN_new()
