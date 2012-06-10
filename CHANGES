@@ -1,6 +1,7 @@
 2012-06-10
 	Simplified functions for primality testing and random-number generation
-are added, plus an implementation of Euclid's Extended GCD algorithm.
+are added, plus an implementation of Euclid's Extended GCD algorithm.  For 
+the time being, these changes have only been tested as .so for i386 .
 
 
 2012-05-28
