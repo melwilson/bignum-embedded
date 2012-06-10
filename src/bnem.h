@@ -30,6 +30,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #ifndef BNEM_H_
 #define BNEM_H_
+#include <stdint.h>
 
 #include <bnem_types.h>
 #include "bnem_kludge.h"
@@ -37,5 +38,13 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define BIGNUM_LOCAL(label,size)	BN_ULONG label##_words[size]; BIGNUM label={.d=label##_words, .top=0, .dmax=(size), .neg=0, .flags=BN_FLG_STATIC_DATA}
 #define BITS(n)	(((n) + sizeof(BN_ULONG)*8-1) / (sizeof(BN_ULONG) * 8))
+
+typedef uint32_t (*bnem_random_word_t)();	// type of application-provided source of random word values
+
+int bnem_is_prime (BIGNUM *np, int confidence);
+int bnem_possibly_prime (BIGNUM *np);
+int bnem_random (BIGNUM *result, int datasize);
+BIGNUM *bnem_random_prime (BIGNUM *r, int bits);
+int bnem_xgcd (BIGNUM *rx, BIGNUM *ry, const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx);
 
 #endif // BNEM_H_

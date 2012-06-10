@@ -111,7 +111,7 @@ class TestAdd (BignumTest):
 		self.assertEqual (rp.contents.python_int(), 517)
 		
 	def test_add_word (self):
-		'''Random tests of BN_add_word.'''
+		'''Randomized tests of BN_add_word.'''
 		ap = lbn.BN_new()
 		for i in range (10):
 			av = random_big()
@@ -155,7 +155,7 @@ class TestSub (BignumTest):
 		self.assertEqual (sp.contents.python_int(), -3)
 		
 	def test_sub_word (self):
-		'''Random tests of BN_sub_word.'''
+		'''Randomized tests of BN_sub_word.'''
 		ap = lbn.BN_new()
 		for i in range (10):
 			av = random_big()
@@ -206,7 +206,7 @@ class TestMul (BignumTest):
 			#~ print ('%s * %s = %s' % (av, bv, rp.contents.python_int()))
 		
 	def test_mul_word (self):
-		'''Random tests of BN_mul_word.'''
+		'''Randomized tests of BN_mul_word.'''
 		ap = lbn.BN_new()
 		for i in range (10):
 			av = random_big()
@@ -263,7 +263,7 @@ class TestDiv (BignumTest):
 		#~ self.assertEqual (rp.contents.python_int(), tr)
 		
 	def test_div_2 (self):
-		'''Random tests.'''
+		'''Randomized tests.'''
 		ctx = lbn.BN_CTX_new()
 		drp = lbn.BN_new()
 		ddp = lbn.BN_new()
@@ -313,7 +313,34 @@ class TestModExp (BignumTest):
 			self.assertEqual (code, 1)
 			self.assertEqual (rp.contents.python_int(), pow (av, pv, mv))
 			#~ print ('%s ** %s %% %s = %s' % (av, pv, mv, rp.contents.python_int()))
+			
+			
+class TestPrimes (BignumTest):
+	'''Test prime-number algos.'''
+	def test_prime_1 (self):
+		p1 = lbn.BN_new()
+		q1 = lbn.bnem_random_prime (p1, 64)
+		print ('Random prime (4):', int (p1.contents), int (q1.contents))
+		# Note that ctypes does not have OOR (original object return), it constructs a new, equivalent object each time you retrieve an attribute:
+		# so the following kinds of test can't work:
+		#: self.assert_(p1 is q1)
+		#: self.assert_(p1.contents is q1.contents)
+		#: self.assert_(p1.contents == q1.contents)
+		self.assert_(int (p1.contents) == int (q1.contents))
 		
+		p2 = lbn.BN_new()
+		q2 = lbn.bnem_random_prime (p2, 32)
+		print ('Random prime (3):', int (p2.contents), int (q2.contents))
+		
+		ctx = lbn.BN_CTX_new()
+		n3 = lbn.BN_new()
+		code = lbn.BN_mul (n3, p1, p2, ctx)
+		self.assertEqual (code, 1)
+		
+		primecode = lbn.bnem_is_prime (p1, 25)
+		self.assertEqual (primecode, 1)
+		primecode = lbn.bnem_is_prime (n3, 25)
+		self.assertEqual (primecode, 0)
 
 #-----------------------------------------------------------
 unittest.main()

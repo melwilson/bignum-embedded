@@ -5,8 +5,8 @@
 CROSS_PREFIX= 
 CROSS_FLAGS= 
 
-#~ CONTROL_DEFS= -DOPENSSL_NO_FP_API -DTHIRTY_TWO_BIT -DOPENSSL_NO_ASM
 CONTROL_DEFS= -DTHIRTY_TWO_BIT
+OPTIMIZATION= -Os
 
 CC=	$(CROSS_PREFIX)gcc
 CPP= $(CC) -E
@@ -14,23 +14,24 @@ AR= $(CROSS_PREFIX)ar
 RANLIB = $(CROSS_PREFIX)ranlib
 
 INCLUDES = -I.
-CFLAG=  -g $(CROSS_FLAGS) -ffunction-sections $(CONTROL_DEFS)
+CFLAG=  -g $(CROSS_FLAGS) $(OPTIMIZATION) -ffunction-sections $(CONTROL_DEFS)
 MAKEFILE=	Makefile
 
 BN_ASM=		bn_asm.o
 
-CFLAGS= $(INCLUDES) $(CFLAG)
+CFLAGS= $(INCLUDES) $(OPTIMIZATION) $(CFLAG)
 ASFLAGS= $(INCLUDES) $(ASFLAG)
 AFLAGS= $(ASFLAGS)
 
-LIB= libbnem.a
+LIB= libbnem
 LIBSRC=	bn_add.c bn_div.c bn_exp.c bn_lib.c bn_ctx.c bn_mul.c bn_mod.c \
 	bn_rand.c bn_shift.c bn_word.c \
 	bn_kron.c bn_sqrt.c bn_gcd.c bn_prime.c bn_sqr.c bn_asm.c \
 	bn_recp.c bn_mont.c bn_mpi.c bn_exp2.c bn_gf2m.c bn_nist.c \
 	bn_depr.c bn_const.c \
 	bn_err.c bn_blind.c \
-	bnem_errno.c
+	bnem_errno.c \
+	bnem_lib.c bnem_primes.c bnem_rand.c
 #	# bn_print.c
 
 LIBOBJ=	bn_add.o bn_div.o bn_exp.o bn_lib.o bn_ctx.o bn_mul.o bn_mod.o \
@@ -39,31 +40,32 @@ LIBOBJ=	bn_add.o bn_div.o bn_exp.o bn_lib.o bn_ctx.o bn_mul.o bn_mod.o \
 	bn_recp.o bn_mont.o bn_mpi.o bn_exp2.o bn_gf2m.o bn_nist.o \
 	bn_depr.o bn_const.o \
 	bn_err.o bn_blind.o \
-	bnem_errno.o
+	bnem_errno.o \
+	bnem_lib.o bnem_primes.o bnem_rand.o
 #	# bn_print.o
 
 SRC= $(LIBSRC)
 
-all: bnem.h $(LIB) libbnem.so
+all: bnem.h $(LIB).a $(LIB).so
 
-$(LIB): $(LIBOBJ)
-	$(AR) -rcs $(LIB) $(LIBOBJ)
+$(LIB).a: $(LIBOBJ)
+	$(AR) -rcs $@ $^
 	
-libbnem.so: $(LIBOBJ)
-	$(CC) -g -shared -o libbnem.so $(LIBOBJ)
+$(LIB).so: $(LIBOBJ)
+	$(CC) -g -shared -o $@ $^
 	
 
 # GNU make "catch all"
 %-mont.s:	asm/%-mont.pl;	$(PERL) $< $(CFLAGS) > $@
 
 install:
-	cp libbnem.a libbnem.so ..
+	cp $(LIB).a $(LIB).so ..
 	cp *.h ..
 
 tags:
 	ctags $(SRC)
 
-tests: libbnem.so
+tests: $(LIB).so
 	../unittests/bnem_unit_1.py
 
 lint:
@@ -78,7 +80,7 @@ dclean:
 	mv -f Makefile.new $(MAKEFILE)
 
 clean:
-	rm -f *.o *.obj  tags core .pure .nfs* *.old *.bak  $(LIB) libbnem.so
+	rm -f *.o *.obj  tags core .pure .nfs* *.old *.bak  $(LIB).a $(LIB).so
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
