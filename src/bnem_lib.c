@@ -1,6 +1,9 @@
-#include <bnem.h>
 #include <stdint.h>
 #include <stdlib.h>
+#ifndef C_DEBUG
+#define C_DEBUG	0
+#endif
+#include <bnem.h>
 
 // Fill in a bad random number implementation until the application links in a better one..
 uint32_t bnem_random_word () __attribute__ ((weak));

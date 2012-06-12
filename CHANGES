@@ -1,3 +1,11 @@
+2012-06-12
+	Undid previous cuts to bn_errno format; used bnem_random_word in 
+RAND_bytes implementation; added another level of debug printout controlled by 
+C_DEBUG symbol.
+	bignum-embedded is now supporting development of a small embedded
+security application.  A round of code cleanup is starting to look like a good
+thing.
+
 2012-06-10
 	Simplified functions for primality testing and random-number generation
 are added, plus an implementation of Euclid's Extended GCD algorithm.  For 

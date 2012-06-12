@@ -171,7 +171,9 @@
  * Mel Wilson for the bignum-embedded project.
  *
  */
-
+#ifndef C_DEBUG
+#define C_DEBUG	0
+#endif
 
 #ifndef BN_DEBUG
 # undef NDEBUG /* avoid conflicting definitions */
@@ -183,8 +185,13 @@
 //~ #include <stdio.h>
 //~ #include "cryptlib.h"
 #include <limits.h>
+#include <stdint.h>
 #include <string.h>
 #include "bn_lcl.h"
+
+#if C_DEBUG
+#include <stdio.h>
+#endif
 
 //~ const char BN_version[]="Big Number" OPENSSL_VERSION_PTEXT;
 const char BN_version[]="Big Number" " MPW.0";
@@ -442,6 +449,9 @@ static BN_ULONG *bn_expand_internal(const BIGNUM *b, int words)
 	BN_ULONG *A,*a = NULL;
 	const BN_ULONG *B;
 	int i;
+#if C_DEBUG
+	fprintf (stderr, "bn_expand_internal: %p\t%d\n", b, words);
+#endif
 
 	bn_check_top(b);
 
@@ -979,9 +989,15 @@ void ERR_clear_error()
 
 int RAND_bytes (unsigned char *buf, int num)
 {
-	while (num--)
-		*(buf++) = 1;
-	return 1;
+	uint32_t w;
+	int n;
+	while (num > 0) {
+		w = bnem_random_word();
+		n = (num < sizeof (uint32_t)) ? num : sizeof (uint32_t);
+		memcpy (buf, &w, n);
+		buf += n;
+		num -= n;
+	}
 }
 
 int BIO_snprintf (char *buf, int n, char *fmt, void *lp)
@@ -1016,7 +1032,14 @@ void ERR_load_strings(int lib,ERR_STRING_DATA str[])
 
 void ERR_put_error (int lib, int func, int reason, const char *file, int line)
 {
-	bn_errno = func << 16 | reason;
+	/* Standard BN error-reporting code defined in bn_err.h is ..
+	bits 31..24	library code from ERR_LIB_* definitions
+	bits 23..12	function code from BN_F_* definitions
+	bits 11..7	more reason code, also from ERR_R_* definitions in bn.h
+	bit 6		1: fatal error
+	bits 5..0	reason code from ERR_R_* definitions
+	*/
+	bn_errno = (lib & 0xFF)<<24 | (func & 0xFFF)<<12 | (reason & 0xFFF);
 }
 unsigned long ERR_get_error (void)
 {
